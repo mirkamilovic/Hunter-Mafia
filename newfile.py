@@ -3031,75 +3031,173 @@ def mention(uid, name):
 
 # 🗂 ID'larni shu yerga joylashtiring — masalan: "fire": "5379748062124056162"
 # (Har bir qiymat — collect_custom_emoji_ids orqali botga yuborilgandan keyin olingan ID)
+# 🗂 121-tasi ham "Hanter" to'plamidan (t.me/addemoji/HanterMafiaBot), /hanter_ids
+# buyrug'i orqali botning o'zidan olingan HAQIQIY va tekshirilgan ID'lar.
 PREMIUM_EMOJI = {
-    "ring": "5228727030492738251",          # 💍
-    "sword": "5229187373677451945",         # ⚔️
-    "question": "5228799898907876726",      # ❓
-    "money": "5229014153351443614",         # 💰
-    "diamond": "5228894821980087473",       # 💎
-    "moon": "5228923817304306302",          # 🌙
-    "sun": "5228719290961670553",           # ☀️
-    "shield": "5228922863821564668",        # 🛡️
-    "plus": "5231359149660478554",          # ➕
-    "scroll": "5228891871337554041",        # 📜
-    "bandage": "5228903618073114276",       # 🩹
-    "love_letter": "5228856768569844597",   # 💌
-    "briefcase": "5228848397678586256",     # 💼
-    "mask": "5231303735992425075",          # 🎭
-    "potion": "5228960741138141726",        # ⚗️
-    "radar": "5228772393937317770",         # 📡
-    "compass": "5229157918791739430",       # 🧭
-    "vip_card": "5231146733462919805",      # 💳
-    "fox": "5228800723541597880",           # 🦊
-    "box": "5231026641882356456",           # 📦
-    "dice": "5229098343300378907",          # 🎲
-    "crystal_ball": "5228845996791868859",  # 🔮
-    "archive": "5228956141228172000",       # 🗃️
-    "ring_2": "5229144226435997413",        # 💍
-    "signal": "5229167771446719759",        # 📶
-    "crown": "5230938646592395061",         # 👑
-    "frame": "5229048143722618619",         # 🖼️
-    "vase": "5231481483213971535",          # 🏺
-    "vase_2": "5231272129328093395",        # 🏺
-    "fox_2": "5229173436508582890",         # 🦊
-    "top_hat": "5231412377190177912",       # 🎩
-    "medal": "5228773948715473417",         # 🎖️
-    "mother_daughter": "5231291551170207761",  # 👩‍👧
-    "gun": "5229058065097075989",           # 🔫
-    "dagger": "5229063068733976438",        # 🗡️
-    "axe": "5230968002693866223",           # 🪓
-    "police": "5228998876152771465",        # 👮
-    "scale": "5231254489897409072",         # ⚖️
-    "rose": "5231093682026879373",          # 🌹
-    "bomb": "5228795333357646088",          # 💣
-    "bow": "5228683836006640638",           # 🏹
-    "helmet": "5231163183187664108",        # 🪖
-    "salute": "5228984067105533985",        # 🫡
-    "gun_2": "5229239488810626417",         # 🔫
-    "ninja": "5228777788416238250",         # 🥷
-    "wizard": "5228948625035403012",        # 🧙
-    "book": "5231404238227153516",          # 📖
-    "ghost": "5231343726432918883",         # 👻
-    "scale_2": "5228804760810861333",       # ⚖️
-    "angry": "5231491868444889568",         # 😡
-    "medal_2": "5231334208785389927",       # 🎖️
-    "detective": "5228742543914609211",     # 🕵️
-    "wizard_man": "5229099369797559818",    # 🧙‍♂️
-    "ruler": "5228749763754637223",         # 📐
-    "crazy": "5231447076230963307",         # 🤪
-    "shield_2": "5228881885538593285",      # 🛡️
-    "crazy_2": "5231153455086738225",       # 🤪
-    "rocket": "5229061780243787527",        # 🚀
-    "mask_2": "5228833515616904819",        # 🎭
-    "person": "5229067325046567300",        # 👤
-    "shop": "5229138862021849198",          # 🏪
-    "coin": "5229115566119235957",          # 🪙
-    "chart": "5228728198723838647",         # 📈
-    "pillar": "5229232204546095451",        # 🏛️
-    "toolbox": "5228918689113350715",       # 🧰
-    "trophy": "5231216024170306098",        # 🏆
-    "gift": "5229169845915922937",          # 🎁
+    "pillar": "5253656287694070722",          # 🏛️ Clan Symbol
+    "toolbox": "5253547530532201410",         # 🧰 Tools
+    "ring": "5253587611167008718",            # 💍 Unique Gold Ring
+    "shield": "5253731101729400237",          # 🛡️ Lion Crest / Battle Shield
+    "scroll": "5253887094941589781",          # 📜 Ancient Scroll / Broken Seal
+    "bandage": "5253997381111817316",         # 🩹 Healing Bandage
+    "flame": "5253570680405928167",           # 🔥 Radiant Golden Flame
+    "target": "5251516225749558785",          # 🎯 Golden Bullseye
+    "flag_victory": "5251734152390159229",    # 🚩 Ornate Golden Flag - Victory
+    "gems_cluster": "5251496189727124050",    # 💎 Gemstone Cluster
+    "bullet": "5253846468845937581",          # 🔸 Glowing Golden Bullet
+    "radar": "5253972865438492175",           # 📡 Brass-and-Gold Radar Dish
+    "crystal_heart": "5253952975444947021",   # 💔 Cracked Crystal Heart
+    "mask": "5253580120744042388",            # 🎭 Golden Theatrical Mask
+    "clan_banner": "5251742570526060246",     # 🚩 Unrolled Golden Clan Banner
+    "shadow_figure": "5251316295021932853",   # 👤 Smoky Shadow Figure
+    "dagger": "5254004858649880562",          # 🗡️ Legendary Dagger
+    "shield_2": "5251295150897932106",        # 🛡️ Energy Shield Orb
+    "eye": "5253662747324882982",             # 👁 Golden All-Seeing Eye
+    "fox": "5251620945642169057",             # 🦊 Lucky Fox-Tail Charm (HUNTER ELITE)
+    "fox_2": "5251620945642169057",           # 🦊 xuddi shu rasm, ism oxirida
+    "vest": "5253611761768111359",            # 🎽 Ornate Bulletproof Vest
+    "mask_2": "5251305385804998038",          # 🎭 Polished Iron Masquerade Mask
+    "document": "5253618023830432327",        # 📜 Aged Forged Document
+    "goggles": "5251279323943451259",         # 🥽 Steampunk-Luxury Goggles
+    "love_letter": "5253623117661646222",     # 💌 Wax-Sealed Mysterious Letter
+    "potion": "5253655145232769885",          # ⚗️ Crystal Poison Vial
+    "gps_beacon": "5253823894497826517",      # 📍 Gold-Plated GPS Beacon
+    "amulet": "5253592932631487494",          # 🔮 Magical Amulet
+    "bank_rune": "5253689492086234676",       # 🏦 Bank Interest Rune
+    "sword": "5251574663074587729",           # ⚔️ Diamond-Encrusted Longsword
+    "money": "5251467834353034219",           # 💰 Stack Bills
+    "diamond": "5253742414673255222",         # 💎 Massive Diamond
+    "coin": "5253574498631851107",            # 🪙 Hunter Coin
+    "treasure_chest": "5251575586492561187",  # 📦 Treasure Chest
+    "spinning_coin": "5253800937897635331",   # 🪙 Spinning Coin
+    "jackpot": "5251414052772554556",         # 🎰 JACKPOT!
+    "vault": "5253718478820517394",           # 🏦 Vault Building
+    "vip_card": "5251308731584522091",        # 💳 VIP Card
+    "gift": "5253706195214050358",            # 🎁 Gift Box
+    "stars": "5251515856382371891",           # ⭐️ Telegram Stars
+    "immunity_charm": "5251674405100106367",  # 🛡 Immunity Charm
+    "briefcase": "5253568275224240880",       # 💼 Luxury Briefcase
+    "box": "5253844067959217666",             # 📦 Ornate Loot Box
+    "dice": "5253887975409886895",            # 🎲 Glowing Dice
+    "crystal_ball": "5253618028125396002",    # 🔮 Crystal Ball
+    "archive": "5253750429082232796",         # 🗃️ Archive Chest
+    "signal": "5251426662796534647",          # 📶 Signal Tower
+    "vase": "5253955303317227024",            # 🏺 Porcelain Vase
+    "vase_2": "5251350006220237212",          # 🏺 Ceremonial Urn
+    "mother_daughter": "5251648746965477706", # 👩‍👧 Mother & Child Emblem
+    "shop": "5253530260468706909",            # 🏪 Ornate Gold Shop Icon
+    "chart": "5251525597368198419",           # 📈 Rising Bar Chart
+    "gear": "5251609396475112519",            # ⚙️ Settings Gear
+    "magnifier": "5253956248210022896",       # 🔍 Archives Magnifier
+    "bell": "5251671888249267242",            # 🔔 Notifications Bell
+    "key_item": "5253534177478877517",        # 🔑 Antique Gold Key
+    "padlock": "5253517976862237810",         # 🔒 Engraved Gold Padlock
+    "map": "5251462792061429779",             # 🗺 Map
+    "gun": "5253469057184737578",             # 🔫 Engraved Gold Pistol
+    "gun_2": "5253681078245304000",           # 🔫 Pearl & Gold Revolver
+    "helmet": "5253630311731863374",          # 🪖 Gold Battle Helmet
+    "compass": "5251624768163066301",         # 🧭 Compass
+    "inventory_chest": "5251355615447526296", # 🎒 Inventory Chest
+    "question": "5254003046173682568",        # ❓ Help
+    "warning": "5251375114599050954",         # ⚠️ Warning Triangle
+    "moon": "5253688538603496820",            # 🌙 Night City
+    "sun": "5251569968675332763",             # ☀️ Sunrise
+    "salute": "5251604517392262503",          # 🫡 Saluting Hand
+    "book": "5251562774605112341",            # 📖 Ancient Spellbook
+    "angry": "5253569756987960765",           # 😡 Angry Mask Emblem
+    "rocket": "5253811460567506961",          # 🚀 Gold Rocket Ship
+    "person": "5253904854631360486",          # 👤 Silhouette Figure Emblem
+    "ballot": "5253749166361845208",          # 🗳️ Ballot Box
+    "duel": "5253845270550063164",            # ⚔️ Duel Swords
+    "explosion": "5253687546466052125",       # 💥 Explosion Burst
+    "broken_lock": "5253984844102279619",     # 🔓 Broken Lock
+    "gravestone": "5251294738581070469",      # ⚰️ Gravestone
+    "ring_2": "5254001079078659932",          # 💍 Marriage Heart/Ring
+    "hourglass": "5253668944962690414",       # ⏳ Hourglass
+    "lightning": "5253896878877091357",       # ⚡️ Lightning Bolt
+    "crown": "5251609456604652565",           # 👑 Royal Gold Crown
+    "frame": "5253452517265680802",           # 🖼️ Baroque Picture Frame
+    "dragon": "5251539156579953188",          # 🐉 Dragon Head Crest
+    "admin_shield": "5253662038655280079",    # 🛡 Admin Shield Emblem
+    "elite_badge": "5253899331303418373",     # 💎 Winged Diamond Badge
+    "wedding_ring_set": "5253527924006493718",# 💍 Wedding Ring Set
+    "nameplate": "5251468689051527102",       # 📛 Engraved Nameplate
+    "silk_flag": "5251432379398008839",       # 🚩 Folded Silk Flag
+    "trophy": "5251284426364597200",          # 🏆 Golden Trophy Cup
+    "medal": "5253583831595787507",           # 🎖️ Bronze Medal
+
+    # ── Quyidagilar uchun Hanter to'plamida ALOHIDA mos surat yo'q (bular endi
+    #    pastdagi ROLE_PORTRAIT_EMOJI orqali TO'LIQ PORTRET ko'rinishida
+    #    ko'rsatiladi) — eski ID'lar zarasiz saqlanib qoldi, hech narsaga
+    #    ta'sir qilmaydi ──
+    "plus": "5231359149660478554",            # ➕ (to'plamda yo'q)
+    "rose": "5231093682026879373",            # 🌹 (to'plamda yo'q)
+    "wizard": "5228948625035403012",          # 🧙 (to'plamda yo'q)
+    "top_hat": "5231412377190177912",         # 🎩 (Don portreti ishlatiladi)
+    "axe": "5230968002693866223",             # 🪓 (Varvar portreti ishlatiladi)
+    "police": "5228998876152771465",          # 👮 (Serjant portreti ishlatiladi)
+    "scale": "5231254489897409072",           # ⚖️ (Advokat portreti ishlatiladi)
+    "bow": "5228683836006640638",             # 🏹 (Mergan portreti ishlatiladi)
+    "ninja": "5228777788416238250",           # 🥷 (O'g'ri portreti ishlatiladi)
+    "ghost": "5231343726432918883",           # 👻 (Arvoh portreti ishlatiladi)
+    "scale_2": "5228804760810861333",         # ⚖️ (Sudya portreti ishlatiladi)
+    "medal_2": "5231334208785389927",         # 🎖️ (General portreti ishlatiladi)
+    "detective": "5228742543914609211",       # 🕵️ (Komissar portreti ishlatiladi)
+    "wizard_man": "5229099369797559818",      # 🧙‍♂️ (Sehrgar portreti ishlatiladi)
+    "ruler": "5228749763754637223",           # 📐 (Arxitektor portreti ishlatiladi)
+    "crazy": "5231447076230963307",           # 🤪 (Telba portreti ishlatiladi)
+    "crazy_2": "5231153455086738225",         # 🤪 (to'plamda yo'q)
 }
+
+# 🎭 Har bir ROL uchun — Hanter to'plamidagi HAQIQIY PORTRET rasmi.
+# Kalit — ROLES_INFO dagi rol nomi bilan HARFMA-HARF bir xil bo'lishi shart.
+ROLE_PORTRAIT_EMOJI = {
+    "Don 🎩": "5253642737072252144",
+    "Komissar 🕵️‍♂️": "5251487659922075699",
+    "Doktor 👨‍⚕️": "5253749741887463241",
+    "Mafia 🕶": "5251578786243194412",
+    "Qotil 🗡": "5253737917842506148",
+    "Manyak 🔪": "5253704009075699748",
+    "Serjant 👮‍♂️": "5253922421047602898",
+    "Advokat ⚖️": "5253953456481284153",
+    "Fohisha 💋": "5253857790379728479",
+    "Terrorist 💣": "5253801333034626685",
+    "Mergan 🏹": "5253732566313246629",
+    "Varvar 🪓": "5251705273030059096",
+    "Sadoqatli yordamchi 🤝": "5251695411785149290",
+    "Snayper 🎯": "5253891239585035856",
+    "O'g'ri 🥷": "5251326272230960300",
+    "Sehrgar 🧙‍♂️": "5253986519139525710",
+    "Sehrgar yordamchisi 🪄": "5251295649114141399",
+    "Arvoh 👻": "5253785579094582070",
+    "Sudya 👨‍⚖️": "5253554007342890679",
+    "Provokator 🗣": "5253986364520701937",
+    "General 🎖": "5251484000609938639",
+    "Josus 🕵️": "5253605134633575717",
+    "Bomj 🧟‍♂️": "5251705547907967403",
+    "Arxitektor 📐": "5253719200375024179",
+    "Telba 🤪": "5253669211250663888",
+    "Qorovul 🔦": "5253992119776878475",
+    "Beshikdagi bola 👶": "5253926758964568403",
+    "Tinch aholi 👨‍👩‍👧‍👦": "5251278383345610391",
+}
+
+# 🏛 Klan tizimi uchun qo'shimcha portretlar (rol emas, shuning uchun alohida)
+CLAN_PORTRAIT_EMOJI = {
+    "lideri": "5253463722835354488",   # Klan lideri
+    "azosi": "5253473841778306376",    # Klan a'zosi
+    "logo": "5251358776543457630",     # 🦁 umumiy Lion/klan logotipi
+}
+
+
+def role_portrait(role_name):
+    """Rol nomi oldiga (agar ROLE_PORTRAIT_EMOJI'da mavjud bo'lsa) HAQIQIY
+    Hanter PORTRETINI prefiks sifatida qo'shib qaytaradi. ID topilmasa, rol
+    nomini o'zgarishsiz qaytaradi — xato bermaydi, faqat portret chiqmaydi."""
+    portrait_id = ROLE_PORTRAIT_EMOJI.get(role_name)
+    if not portrait_id:
+        return role_name
+    return f'<tg-emoji emoji-id="{portrait_id}">🎭</tg-emoji> {role_name}'
 
 
 def premium_emoji(key, fallback="⭐️"):
@@ -3280,10 +3378,15 @@ _ROLE_EMOJI_PREMIUM_MAP = {
 
 
 def premium_role_label(role_name):
-    """Rol nomining oxiridagi oddiy emojisini (mos ID mavjud bo'lsa) haqiqiy
-    premium emojiga almashtirib qaytaradi — FAQAT matnni chiroyli ko'rsatish
-    uchun, o'yin logikasidagi asl qiymatga (masalan game["players"][uid]["role"])
-    hech qanday ta'sir qilmaydi."""
+    """Rolni ko'rsatish uchun ENG YAXSHI variantni qaytaradi — FAQAT matnni
+    chiroyli ko'rsatish uchun, o'yin logikasidagi asl qiymatga (masalan
+    game["players"][uid]["role"]) hech qanday ta'sir qilmaydi.
+    1) Avval ROLE_PORTRAIT_EMOJI'da shu rol uchun HAQIQIY Hanter portreti
+       bor-yo'qligi tekshiriladi — bo'lsa, o'sha ishlatiladi.
+    2) Bo'lmasa, eski usul — rol nomidagi oddiy emojini mos PREMIUM_EMOJI
+       belgisiga almashtirish — ishlatiladi (zaxira sifatida)."""
+    if role_name in ROLE_PORTRAIT_EMOJI:
+        return role_portrait(role_name)
     for plain, key in _ROLE_EMOJI_PREMIUM_MAP.items():
         if plain in role_name:
             return role_name.replace(plain, premium_emoji(key, plain))
@@ -5010,7 +5113,7 @@ def cmd_startgame(message):
         if group_link:
             kb = types.InlineKeyboardMarkup()
             kb.add(types.InlineKeyboardButton("↗️ Guruhga o'tish", url=group_link))
-        safe_send(uid, f"🎭 Rolingiz: <b>{role}</b>\n{desc}", kb)
+        safe_send(uid, f"{role_portrait(role)}\nRolingiz: <b>{role}</b>\n{desc}", kb)
 
         if team_of(role) == "mafia":
             teammates = [pp["name"] for u2, pp in game["players"].items() if u2 != uid and team_of(pp["role"]) == "mafia"]
@@ -6133,7 +6236,7 @@ def do_qayta_tanlash(chat_id, game, uid):
     new_role = random.choice([r for r in ALL_ROLES if r != old_role])
     game["players"][uid]["role"] = new_role
     game["players"][uid]["team"] = team_of(new_role)
-    return True, f"📡 Radar faollashtirildi!\nEski rolingiz: {old_role}\nYangi rolingiz: <b>{new_role}</b>\n\n{ROLES_INFO.get(new_role, '')}"
+    return True, f"📡 Radar faollashtirildi!\nEski rolingiz: {old_role}\n{role_portrait(new_role)}\nYangi rolingiz: <b>{new_role}</b>\n\n{ROLES_INFO.get(new_role, '')}"
 
 
 @bot.message_handler(commands=["zahar"])
