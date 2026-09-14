@@ -3101,15 +3101,35 @@ def _ability_power(level, unlock, base, cap):
     return base + (cap - base) * t
 
 
+def _hero_swap_for(uid):
+    """🔁 Agar foydalanuvchi hozir ishtirok etayotgan FAOL o'yin uchun 'Qobiliyatni
+    almashtirish' huquqidan foydalangan bo'lsa — shu o'yindagi almashtirish yozuvini
+    qaytaradi ({"from": key, "to": key, ...} yoki None)."""
+    for _cid, _g in GAMES.items():
+        p = _g.get("players", {}).get(uid)
+        if p and _g.get("phase") in ("night", "day"):
+            return _g.get("hero_ability_swap", {}).get(uid)
+    return None
+
+
 def hero_unlocked_abilities(uid):
     """Foydalanuvchining geroyi va uning HOZIRGI darajasida ochilgan qobiliyatlari
-    ro'yxatini (hisoblangan qiymati bilan) qaytaradi. Har biri: {key,name,desc,value,unlocked}."""
+    ro'yxatini (hisoblangan qiymati bilan) qaytaradi. Har biri: {key,name,desc,value,unlocked}.
+    🔁 Agar o'yinchi joriy o'yin uchun bir martalik 'Qobiliyatni almashtirish' huquqini
+    ishlatgan bo'lsa, shu yerda avtomatik hisobga olinadi — natijada BUTUN botdagi
+    geroy funksiyalari (hero_has_ability, hero_ability_value va h.k.) qo'shimcha
+    o'zgartirishsiz to'g'ri natija beradi."""
     hero = get_hero(uid)
     if not hero:
         return []
+    swap = _hero_swap_for(uid)
     result = []
     for ab in hero["abilities"]:
         unlocked = hero["level"] >= ab["unlock"]
+        if swap and ab["key"] == swap.get("from"):
+            unlocked = False  # bu o'yin uchun ongli ravishda voz kechilgan
+        if swap and ab["key"] == swap.get("to"):
+            unlocked = True  # bu o'yin uchun vaqtincha ochilgan
         value = None
         if unlocked and "base" in ab:
             value = _ability_power(hero["level"], ab["unlock"], ab["base"], ab["cap"])
@@ -4274,6 +4294,18 @@ def announce_item_use(chat_id, user_id, item_label, target_id=None, effect_text=
         if effect_text:
             extra += f"\n{effect_text}"
         safe_send(user_id, extra)
+
+
+def announce_hero_ability_use(chat_id, hero_name, ability_name):
+    """🏆 Geroy mahorati o'yin ichida QO'LDA ishlatilganda guruhga E'LON QILINADI —
+    boshqa tungi/kunduzgi harakat e'lonlari bilan bir xil ohangda: KIM ekani
+    ANONIM qoladi (o'yin sirini saqlash uchun), lekin QAYSI GEROY va QAYSI
+    MAHORAT ishlatilgani ANIQ, ochiq yozib ko'rsatiladi."""
+    text = f"🏆 <i>Kimningdir</i> <b>{hero_name}</b> <i>geroyi mahoratini ishga tushirdi:</i> <b>{ability_name}</b> 🔥"
+    try:
+        bot.send_message(chat_id, text)
+    except Exception:
+        pass
 
 
 # 🦊 Rol nomidagi oddiy (unicode) belgini — agar mos PREMIUM_EMOJI ID mavjud
@@ -6686,14 +6718,18 @@ def apply_kill(game, uid, killed_set, bypass_protection=False, attacker_uids=Non
         if uid in game.get("hero_armed_defense", set()):
             if hero_has_ability(uid, "revive_once") and uid not in game.setdefault("hero_revive_used", set()):
                 game["hero_revive_used"].add(uid)
-                bot.send_message(game["chat_id"], "🔥 <i>Kimningdir geroyi o'limni yengib, uni oxirgi marta hayotga qaytardi!</i>")
+                _hero_ab = next((a for a in hero_unlocked_abilities(uid) if a["key"] == "revive_once"), None)
+                _hero = get_hero(uid)
+                announce_hero_ability_use(game["chat_id"], _hero["name"], _hero_ab["name"] if _hero_ab else "⚰️ O'lmas ruh")
                 safe_send(uid, "🔥 Geroyingizning bir martalik qobiliyati ishga tushdi — bu safar o'limdan qutuldingiz! (Endi sarflandi.)")
                 for a_uid in (attacker_uids or []):
                     safe_send(a_uid, "🏆 <i>Nishoningiz kimningdir geroy qobiliyati tufayli o'limdan qutulib qoldi...</i>")
                 return
             h_chance = hero_survive_chance(uid)
             if h_chance > 0 and random.random() < h_chance:
-                bot.send_message(game["chat_id"], "🏆 <i>Kimningdir geroyi uni tunda hujumdan qutqarib qoldi!</i>")
+                _hero_ab = next((a for a in hero_unlocked_abilities(uid) if a["key"] == "survive"), None)
+                _hero = get_hero(uid)
+                announce_hero_ability_use(game["chat_id"], _hero["name"], _hero_ab["name"] if _hero_ab else "🛡 Tungi chidamlilik")
                 safe_send(uid, "🏆 Geroyingiz faollashtirilgan edi — bu kecha sizga hujum qilishdi, lekin geroyingiz sizni qutqardi!")
                 for a_uid in (attacker_uids or []):
                     safe_send(a_uid, "🏆 <i>Nishoningiz kimningdir geroy qobiliyati tufayli hujumdan omon qoldi...</i>")
@@ -9324,10 +9360,14 @@ def resolve_day(chat_id):
                 and hero_has_ability(hanged, "vote_shield_once")
                 and hanged not in game.setdefault("hero_vote_shield_used", set())):
             game["hero_vote_shield_used"].add(hanged)
+            _hero = get_hero(hanged)
+            _hero_ab = next((a for a in hero_unlocked_abilities(hanged) if a["key"] == "vote_shield_once"), None)
             bot.send_message(
                 chat_id,
                 f"🗳🏆 <b>Geroy qobiliyati ishga tushdi!</b> {mention(hanged, game['players'][hanged]['name'])} "
-                "eng ko'p ovoz oldi, ammo geroyining himoyasi tufayli bu safar osilmaydi! (Qobiliyat sarflandi.)",
+                f"eng ko'p ovoz oldi, ammo <b>{_hero['name']}</b> geroyining "
+                f"<b>{_hero_ab['name'] if _hero_ab else '🗳 Xalq himoyasi'}</b> mahorati tufayli bu safar osilmaydi! "
+                "(Qobiliyat sarflandi.)",
             )
             for voter_uid in game["votes"]:
                 if game["votes"][voter_uid] == hanged:
@@ -10897,7 +10937,8 @@ def cmd_geroy_bashorat(message):
     game["hero_role_reveal_used"].add(uid)
     target_role = game["players"][target.id]["role"]
     safe_send(uid, f"🔍 Geroyingiz bashorat qildi: <b>{esc(target.first_name)}</b>ning aniq roli — <b>{target_role}</b>!\n(Bu qobiliyat endi sarflandi.)")
-    announce_item_use(chat_id, uid, "🔍 Geroy bashorati")
+    hero = get_hero(uid)
+    announce_hero_ability_use(chat_id, hero["name"], "🔍 Chuqur bashorat")
 
 
 def _find_active_game_for(uid):
@@ -10917,7 +10958,8 @@ def do_geroy_koz(uid):
         return False, "❌ Bu qobiliyat faqat tun davomida ishlaydi."
     active_count = len(game.get("responded_tonight", set()))
     safe_send(uid, f"👁 Geroyingiz sizga pichirlaydi: bu tun hozircha <b>{active_count}</b> ta o'yinchi faol harakat qildi.")
-    announce_item_use(chat_id, uid, "👁 Geroy tungi nazari")
+    hero = get_hero(uid)
+    announce_hero_ability_use(chat_id, hero["name"], "👁 Tungi nazar")
     return True, f"👁 Bu tun hozircha {active_count} ta o'yinchi faol harakat qildi."
 
 
@@ -10933,7 +10975,8 @@ def do_geroy_daromad(uid):
     game["hero_income_claimed"].add(uid)
     add_balance(uid, diamond=1)
     safe_send(uid, "💎 Geroyingiz sizga +1 Olmos in'om qildi! (Bu o'yin uchun sarflandi.)")
-    announce_item_use(chat_id, uid, "💎 Geroy boyligi")
+    hero = get_hero(uid)
+    announce_hero_ability_use(chat_id, hero["name"], "💎 Boylik siri")
     return True, "💎 +1 Olmos oldingiz!"
 
 
@@ -10981,11 +11024,11 @@ def build_hero_panel(uid):
         lines.append(f"⏳ <b>Vaqtinchalik geroy</b> — taxminan {qolgan_soat} soatdan keyin tugaydi")
     lines += ["", "✨ <b>Mahoratlar:</b>"]
     kb = types.InlineKeyboardMarkup()
-    for ab in hero["abilities"]:
-        unlocked = level >= ab["unlock"]
-        if unlocked:
-            if "base" in ab:
-                val = _ability_power(level, ab["unlock"], ab["base"], ab["cap"])
+    unlocked_abilities = hero_unlocked_abilities(uid)  # 🔁 almashtirish holatini ham hisobga oladi
+    for ab in unlocked_abilities:
+        if ab["unlocked"]:
+            if ab["value"] is not None:
+                val = ab["value"]
                 val_txt = f"{val*100:.0f}%" if val < 1 else f"{int(val)}"
                 lines.append(f"✅ <b>{ab['name']}</b> — hozirgi kuchi: {val_txt}")
             else:
@@ -10994,23 +11037,51 @@ def build_hero_panel(uid):
         else:
             lines.append(f"🔒 <b>{ab['name']}</b> — {ab['unlock']}-darajada ochiladi")
 
+    chat_id_ig, game_ig = _find_active_game_for(uid)
+    in_game = bool(game_ig and uid in game_ig["players"] and game_ig["players"][uid]["alive"])
+
     lines.append("")
-    lines.append("🕹 <b>Qo'lda ishlatish:</b> pastdagi tugmalar yoki mos buyruqlar orqali "
+    lines.append("🕹 <b>Qo'lda ishlatish:</b> pastdagi tugmalar orqali "
                   "(faqat faol o'yin ichida ishlaydi — geroylar avtomatik ISHLAMAYDI!):")
-    if any(a["key"] in ("survive", "revive_once") and level >= a["unlock"] for a in hero["abilities"]):
+    if any(a["key"] in ("survive", "revive_once") and a["unlocked"] for a in unlocked_abilities):
         lines.append("  🛡 Himoya — har TUN, bot avtomatik yuboradigan tugma orqali")
-    if any(a["key"] == "vote_shield_once" and level >= a["unlock"] for a in hero["abilities"]):
+    if any(a["key"] == "vote_shield_once" and a["unlocked"] for a in unlocked_abilities):
         lines.append("  🗳 Xalq himoyasi — har KUN, bot avtomatik yuboradigan tugma orqali")
-    if any(a["key"] == "role_reveal_once" and level >= a["unlock"] for a in hero["abilities"]):
-        lines.append("  🔍 Bashorat — kimningdir xabariga reply qilib /geroy_bashorat")
-    if any(a["key"] == "compass_free" and level >= a["unlock"] for a in hero["abilities"]):
-        lines.append("  🧭 Kompas — kimningdir xabariga reply qilib /kompas (bepul)")
-    if any(a["key"] == "night_vision_auto" and level >= a["unlock"] for a in hero["abilities"]):
+    if any(a["key"] == "role_reveal_once" and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  🔍 Bashorat — pastdagi tugma orqali (nishonni ro'yxatdan tanlaysiz)")
+        if in_game and uid not in game_ig.setdefault("hero_role_reveal_used", set()):
+            kb.add(types.InlineKeyboardButton("🔍 Bashorat qilish", callback_data=f"herotarget|bashorat|{uid}"))
+    if any(a["key"] == "compass_free" and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  🧭 Kompas — pastdagi tugma orqali, BEPUL (nishonni ro'yxatdan tanlaysiz)")
+        if in_game:
+            kb.add(types.InlineKeyboardButton("🧭 Kompasni ishlatish", callback_data=f"herotarget|kompas|{uid}"))
+    if any(a["key"] == "night_vision_auto" and a["unlocked"] for a in unlocked_abilities):
         lines.append("  👁 Tungi nazar — pastdagi tugma yoki /geroy_koz")
         kb.add(types.InlineKeyboardButton("👁 Tungi nazarni ishlatish", callback_data=f"herouse|koz|{uid}"))
-    if any(a["key"] == "diamond_trickle" and level >= a["unlock"] for a in hero["abilities"]):
+    if any(a["key"] == "diamond_trickle" and a["unlocked"] for a in unlocked_abilities):
         lines.append("  💎 Boylik — pastdagi tugma yoki /geroy_daromad (o'yinda 1 marta)")
         kb.add(types.InlineKeyboardButton("💎 Boylikni undirish", callback_data=f"herouse|daromad|{uid}"))
+    if any(a["key"] in ("duel_bonus", "duel_draw_chance") and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  ⚔️ Duel mahorati — /duel chaqirilganda AVTOMATIK qo'shiladi")
+    if any(a["key"] == "vote_weight" and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  👑 Ovoz og'irligi — kunduzgi ovoz berishda AVTOMATIK qo'shiladi")
+    if any(a["key"] == "bonus_dollar" and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  💰 Bonus — kunlik /bonus olganda AVTOMATIK qo'shiladi")
+    if any(a["key"] == "luck_boost" and a["unlocked"] for a in unlocked_abilities):
+        lines.append("  🍀 Omad — do'kondagi tasodifiy buyumlarda AVTOMATIK ishlaydi")
+
+    # 🔁 Qobiliyatni almashtirish — o'yin davomida FAQAT 1 marta: hozir ochiq bo'lgan
+    # bitta mahoratdan voz kechib, o'rniga o'z geroyingizning (hatto hali ochilmagan)
+    # boshqa mahoratlaridan birini shu o'yin uchun vaqtincha ishlatishingiz mumkin.
+    if in_game and len(hero["abilities"]) >= 2:
+        existing_swap = game_ig.setdefault("hero_ability_swap", {}).get(uid)
+        if existing_swap:
+            lines.append(f"\n🔁 Bu o'yin uchun almashtirilgan: <b>{existing_swap['from_name']}</b> → "
+                          f"<b>{existing_swap['to_name']}</b> (vaqtincha)")
+        else:
+            lines.append("\n🔁 <b>O'yin davomida 1 marta</b> — bitta mahoratingizdan voz kechib, "
+                          "o'rniga boshqasini vaqtincha ishlatishingiz mumkin.")
+            kb.add(types.InlineKeyboardButton("🔁 Qobiliyatni almashtirish", callback_data=f"heroswap|start|{uid}"))
 
     cost = hero_level_up_cost(level)
     if cost is not None:
@@ -11095,6 +11166,166 @@ def cb_hero_arm(call):
             bot.edit_message_text("🗳✅ Xalq himoyasi shu kunga FAOLLASHTIRILDI.", call.message.chat.id, call.message.message_id)
         except Exception:
             pass
+
+
+# ================================================================================
+#  🎯 Nishonga qaratilgan geroy mahoratlari (🔍 Bashorat, 🧭 Bepul kompas) —
+#  "🦸 Geroyim" panelidagi tugma bosilganda, foydalanuvchiga SHAXSIY xabarda
+#  (DM) tirik o'yinchilar ro'yxati chiqadi; birini tanlash orqali mahorat
+#  darhol ishga tushadi.
+# ================================================================================
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("herotarget|"))
+def cb_hero_target_start(call):
+    maybe_capture_owner(call.from_user)
+    _, kind, owner_id_s = call.data.split("|")
+    owner_id = int(owner_id_s)
+    uid = call.from_user.id
+    if uid != owner_id:
+        bot.answer_callback_query(call.id, "❌ Bu sizning geroyingiz emas.", show_alert=True)
+        return
+    chat_id, game = find_active_game_for(uid)
+    if not game:
+        bot.answer_callback_query(call.id, "❌ Bu qobiliyat faqat faol o'yin davomida ishlaydi.", show_alert=True)
+        return
+    if kind == "bashorat":
+        if not hero_has_ability(uid, "role_reveal_once"):
+            bot.answer_callback_query(call.id, "❌ Bu qobiliyat sizda yo'q.", show_alert=True)
+            return
+        if uid in game.setdefault("hero_role_reveal_used", set()):
+            bot.answer_callback_query(call.id, "❌ Bu qobiliyatingizni shu o'yin davomida allaqachon ishlatib bo'lgansiz.", show_alert=True)
+            return
+    elif kind == "kompas":
+        if not hero_has_free_compass(uid):
+            bot.answer_callback_query(call.id, "❌ Bu qobiliyat sizda yo'q.", show_alert=True)
+            return
+    else:
+        return
+    targets = [(pid, p["name"]) for pid, p in alive_players(game).items() if pid != uid]
+    if not targets:
+        bot.answer_callback_query(call.id, "❌ Tanlash uchun boshqa tirik o'yinchi yo'q.", show_alert=True)
+        return
+    kb = types.InlineKeyboardMarkup()
+    for pid, name in targets:
+        kb.add(types.InlineKeyboardButton(name, callback_data=f"herotargetpick|{kind}|{uid}|{pid}"))
+    label = "🔍 Bashorat qilmoqchi bo'lgan o'yinchini tanlang:" if kind == "bashorat" else "🧭 Kompasni kimga qaratamiz?"
+    ok = safe_send(uid, label, reply_markup=kb)
+    if ok:
+        bot.answer_callback_query(call.id, "📩 Tanlov shaxsiy xabaringizga yuborildi.", show_alert=True)
+    else:
+        bot.answer_callback_query(call.id, "❌ Sizga shaxsiy xabar yubora olmadim — botni DM'da /start bilan oching.", show_alert=True)
+
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("herotargetpick|"))
+def cb_hero_target_pick(call):
+    maybe_capture_owner(call.from_user)
+    _, kind, owner_id_s, target_id_s = call.data.split("|")
+    owner_id, target_id = int(owner_id_s), int(target_id_s)
+    uid = call.from_user.id
+    if uid != owner_id:
+        bot.answer_callback_query(call.id, "❌ Bu sizning tanlovingiz emas.", show_alert=True)
+        return
+    chat_id, game = find_active_game_for(uid)
+    if not game or target_id not in game["players"] or not game["players"][target_id]["alive"]:
+        bot.answer_callback_query(call.id, "❌ Bu tanlov endi amal qilmaydi.", show_alert=True)
+        try:
+            bot.edit_message_text("❌ Bu tanlov muddati o'tdi.", call.message.chat.id, call.message.message_id)
+        except Exception:
+            pass
+        return
+    hero = get_hero(uid)
+    target_name = game["players"][target_id]["name"]
+    if kind == "bashorat":
+        if uid in game.setdefault("hero_role_reveal_used", set()):
+            bot.answer_callback_query(call.id, "❌ Bu qobiliyatingizni allaqachon ishlatib bo'lgansiz.", show_alert=True)
+            return
+        game["hero_role_reveal_used"].add(uid)
+        target_role = game["players"][target_id]["role"]
+        result_text = f"🔍 Geroyingiz bashorat qildi: <b>{esc(target_name)}</b>ning aniq roli — <b>{target_role}</b>!\n(Bu qobiliyat endi sarflandi.)"
+        ability_name = "🔍 Chuqur bashorat"
+    elif kind == "kompas":
+        ok, msg = do_kompas(chat_id, game, uid, target_id, target_name)
+        if not ok:
+            bot.answer_callback_query(call.id, msg, show_alert=True)
+            return
+        result_text = msg
+        ability_name = "🧭 Cheksiz kompas"
+    else:
+        return
+    bot.answer_callback_query(call.id, "✅ Bajarildi!")
+    try:
+        bot.edit_message_text(result_text, call.message.chat.id, call.message.message_id)
+    except Exception:
+        safe_send(uid, result_text)
+    announce_hero_ability_use(chat_id, hero["name"], ability_name)
+
+
+# ================================================================================
+#  🔁 QOBILIYATNI ALMASHTIRISH — o'yin davomida BIR MARTA, o'z geroyingizning
+#  hozir OCHIQ bo'lgan bitta mahoratidan voz kechib, o'rniga (hali ochilmagan
+#  bo'lsa ham) boshqa mahoratlardan birini SHU O'YIN uchun vaqtincha olasiz.
+# ================================================================================
+
+@bot.callback_query_handler(func=lambda c: c.data.startswith("heroswap|"))
+def cb_hero_swap(call):
+    maybe_capture_owner(call.from_user)
+    parts = call.data.split("|")
+    action = parts[1]
+    owner_id = int(parts[2])
+    uid = call.from_user.id
+    if uid != owner_id:
+        bot.answer_callback_query(call.id, "❌ Bu sizning geroyingiz emas.", show_alert=True)
+        return
+    chat_id, game = find_active_game_for(uid)
+    if not game:
+        bot.answer_callback_query(call.id, "❌ Bu faqat faol o'yin davomida ishlatiladi.", show_alert=True)
+        return
+    hero = get_hero(uid)
+    if not hero:
+        bot.answer_callback_query(call.id, "❌ Sizda geroy yo'q.", show_alert=True)
+        return
+    if uid in game.setdefault("hero_ability_swap", {}):
+        bot.answer_callback_query(call.id, "❌ Bu huquqni shu o'yin uchun allaqachon ishlatib bo'lgansiz.", show_alert=True)
+        return
+
+    if action == "start":
+        unlocked_now = [a for a in hero_unlocked_abilities(uid) if a["unlocked"]]
+        if not unlocked_now:
+            bot.answer_callback_query(call.id, "❌ Hozircha voz kechadigan ochiq mahoratingiz yo'q.", show_alert=True)
+            return
+        kb = types.InlineKeyboardMarkup()
+        for ab in unlocked_now:
+            kb.add(types.InlineKeyboardButton(ab["name"], callback_data=f"heroswap|from|{uid}|{ab['key']}"))
+        bot.answer_callback_query(call.id)
+        safe_send(uid, "🔁 Qaysi mahoratingizdan voz kechmoqchisiz?", reply_markup=kb)
+
+    elif action == "from":
+        from_key = parts[3]
+        others = [a for a in hero["abilities"] if a["key"] != from_key]
+        if not others:
+            bot.answer_callback_query(call.id, "❌ Almashtirish uchun boshqa mahorat yo'q.", show_alert=True)
+            return
+        kb = types.InlineKeyboardMarkup()
+        for ab in others:
+            kb.add(types.InlineKeyboardButton(ab["name"], callback_data=f"heroswap|to|{uid}|{from_key}|{ab['key']}"))
+        bot.answer_callback_query(call.id)
+        safe_send(uid, "🔁 O'rniga (shu o'yin uchun vaqtincha) qaysi mahoratni olmoqchisiz?", reply_markup=kb)
+
+    elif action == "to":
+        from_key, to_key = parts[3], parts[4]
+        from_ab = next((a for a in hero["abilities"] if a["key"] == from_key), None)
+        to_ab = next((a for a in hero["abilities"] if a["key"] == to_key), None)
+        if not from_ab or not to_ab:
+            bot.answer_callback_query(call.id, "❌ Xatolik yuz berdi, qayta urinib ko'ring.", show_alert=True)
+            return
+        game["hero_ability_swap"][uid] = {
+            "from": from_key, "to": to_key,
+            "from_name": from_ab["name"], "to_name": to_ab["name"],
+        }
+        bot.answer_callback_query(call.id, "✅ Almashtirildi!", show_alert=True)
+        safe_send(uid, f"🔁 <b>{from_ab['name']}</b> mahoratingizdan shu o'yin uchun voz kechdingiz, "
+                        f"o'rniga <b>{to_ab['name']}</b> vaqtincha faollashtirildi!")
+        announce_hero_ability_use(chat_id, hero["name"], f"🔁 Qobiliyat almashtirildi ({to_ab['name']})")
 
 
 @bot.callback_query_handler(func=lambda c: c.data.startswith("herolvl|"))
