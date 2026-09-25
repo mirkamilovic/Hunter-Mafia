@@ -1,0 +1,10 @@
+{
+  "version":"v31",
+  "stage":"3D visual polish",
+  "base_assets":228,
+  "rendering":["WebGL","GLB/GLTF","ACES tone mapping","PBR material tuning","soft shadows","cinematic lighting","mobile pixel-ratio cap"],
+  "avatar_controls":["rotation","height","head","shoulders","waist","skin","hair","eyes","brows","nose","mouth"],
+  "animations":["idle","walk","pose"],
+  "clothing":{"female":100,"male":100},
+  "note":"The included GLB assets are procedural/game-ready base assets; photorealistic AAA character art still requires artist-authored high-detail meshes, textures and animation clips."
+}
